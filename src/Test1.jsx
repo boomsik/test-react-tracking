@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { initializeApp } from "firebase/app";
-import dexs from "./99915600.png";
 import { getDatabase, ref, onValue, off } from "firebase/database";
 import "./FirebaseDataComponent.css";
+import dexs from "./99915600.png";
 
 const FirebaseDataComponent = () => {
     const [dataList, setDataList] = useState([]);
@@ -13,7 +13,6 @@ const FirebaseDataComponent = () => {
     const itemsPerPage = 8;
 
     useEffect(() => {
-        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyAaXnn8SpVsznGR9ReK2gRXtvf0QzRJWQY",
             authDomain: "tracking-9dd77.firebaseapp.com",
@@ -24,85 +23,44 @@ const FirebaseDataComponent = () => {
             appId: "1:413125705228:web:189a72d6252c631f5ef829",
         };
 
-        // Initialize Firebase app
         const app = initializeApp(firebaseConfig);
-
-        // Get a reference to the database
         const db = getDatabase(app);
         const dataRef = ref(db, "tokenData");
 
-        // Listen for changes in the database
-        // onValue(dataRef, (snapshot) => {
-        //     const data = snapshot.val();
-        //     if (data) {
-        //         // Convert data object to an array of key-value pairs
-        //         const dataArray = Object.entries(data);
-        //         // Prepend the new data to the existing array
-        //         setDataList((prevDataList) => [...dataArray, ...prevDataList]);
-
-        //         // Update the rendered count
-        //         setRenderedCount((prevCount) => prevCount + dataArray.length);
-
-        //         // Update daily rendered counts
-        //         const newDailyCounts = {};
-        //         dataArray.forEach(([_, value]) => {
-        //             const dateKey = new Date(
-        //                 value.addedAt
-        //             ).toLocaleDateString();
-        //             // Only update the count for the selected date
-        //             if (
-        //                 selectedDate &&
-        //                 dateKey === selectedDate.toLocaleDateString()
-        //             ) {
-        //                 newDailyCounts[dateKey] =
-        //                     (newDailyCounts[dateKey] || 0) + 1;
-        //             }
-        //         });
-        //         setDailyRenderedCounts(newDailyCounts);
-        //     }
-        // });
-        onValue(dataRef, (snapshot) => {
+        const unsubscribe = onValue(dataRef, (snapshot) => {
             const data = snapshot.val();
             if (data) {
-                // Convert data object to an array of key-value pairs
-                const dataArray = Object.entries(data);
-                // Update the rendered count
-                setRenderedCount((prevCount) => prevCount + dataArray.length);
-
-                // Update daily rendered counts
+                const newDataList = [];
+                let totalCount = 0;
                 const newDailyCounts = {};
-                dataArray.forEach(([_, value]) => {
+
+                Object.entries(data).forEach(([key, value]) => {
                     const dateKey = new Date(
                         value.addedAt
                     ).toLocaleDateString();
-                    // Only update the count for the selected date
                     if (
-                        selectedDate &&
+                        !selectedDate ||
                         dateKey === selectedDate.toLocaleDateString()
                     ) {
+                        newDataList.unshift([key, value]);
+                        totalCount++;
                         newDailyCounts[dateKey] =
                             (newDailyCounts[dateKey] || 0) + 1;
                     }
                 });
-                setDailyRenderedCounts(newDailyCounts);
 
-                // Prepend the new data to the existing array
-                setDataList((prevDataList) => {
-                    const newDataList = [...prevDataList];
-                    dataArray.forEach((item) => {
-                        newDataList.unshift(item);
-                    });
-                    return newDataList;
-                });
+                setDataList(newDataList);
+                setRenderedCount(totalCount);
+                setDailyRenderedCounts(newDailyCounts);
             }
         });
-        // Clean up listener when component unmounts
+
         return () => {
             off(dataRef);
+            unsubscribe();
         };
     }, [selectedDate]);
 
-    // Filter dataList based on selectedDate
     const filteredDataList = selectedDate
         ? dataList.filter(
               ([_, value]) =>
@@ -112,21 +70,16 @@ const FirebaseDataComponent = () => {
           )
         : dataList;
 
-    // Pagination logic
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentDataList = filteredDataList.slice(
-        indexOfFirstItem,
-        indexOfLastItem
+    const visibleDataList = filteredDataList.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
     );
 
-    // Change page
     const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
-    // Function to copy token address to clipboard
-    const copyTokenAddress = (tokenAddress) => {
+    const copyTokenAddress = useCallback((tokenAddress) => {
         navigator.clipboard.writeText(tokenAddress);
-    };
+    }, []);
 
     return (
         <div className="container">
@@ -157,7 +110,7 @@ const FirebaseDataComponent = () => {
                 />
             </div>
             <ul className="list">
-                {currentDataList.map(([key, value]) => (
+                {visibleDataList.map(([key, value]) => (
                     <div key={key} className="token-box">
                         <p className="token-name">Token Name</p>
                         <h5 className="token-value">{value.tokenName}</h5>
@@ -227,7 +180,7 @@ const FirebaseDataComponent = () => {
                                         copyTokenAddress(value.tokenAddress)
                                     }
                                 >
-                                    Banana Gun Solana Bot
+                                    Sol Trade Bot
                                 </a>
                             </li>
                         </ul>

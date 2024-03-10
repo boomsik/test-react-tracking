@@ -91,7 +91,7 @@ const FirebaseDataComponent = () => {
     // Функция для создания ссылки на Dex Screener в зависимости от типа устройства
     const getDexScreenerLink = (value) => {
         const dexScreenerLink = isMobileDevice()
-            ? `mobile-link-to-dex-screener`
+            ? `https://apps.apple.com/us/app/dex-screener/id1631840457`
             : value.dexScreenerLink;
         return dexScreenerLink;
     };

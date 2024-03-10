@@ -81,6 +81,21 @@ const FirebaseDataComponent = () => {
         navigator.clipboard.writeText(tokenAddress);
     }, []);
 
+    // Функция для определения, открывается ли приложение на мобильном устройстве
+    const isMobileDevice = () => {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+            navigator.userAgent
+        );
+    };
+
+    // Функция для создания ссылки на Dex Screener в зависимости от типа устройства
+    const getDexScreenerLink = (value) => {
+        const dexScreenerLink = isMobileDevice()
+            ? `mobile-link-to-dex-screener`
+            : value.dexScreenerLink;
+        return dexScreenerLink;
+    };
+
     return (
         <div className="container">
             <h2 className="heading">Список данных из Firebase</h2>
@@ -131,7 +146,7 @@ const FirebaseDataComponent = () => {
                             <li>
                                 <a
                                     className="dex-link"
-                                    href={value.dexScreenerLink}
+                                    href={getDexScreenerLink(value)}
                                     target="_blank"
                                     rel="noreferrer"
                                 >

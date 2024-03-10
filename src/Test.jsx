@@ -9,6 +9,8 @@ const FirebaseDataComponent = () => {
     const [renderedCount, setRenderedCount] = useState(0);
     const [selectedDate, setSelectedDate] = useState(null);
     const [dailyRenderedCounts, setDailyRenderedCounts] = useState({});
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
 
     useEffect(() => {
         // Firebase configuration
@@ -30,35 +32,75 @@ const FirebaseDataComponent = () => {
         const dataRef = ref(db, "tokenData");
 
         // Listen for changes in the database
+        // onValue(dataRef, (snapshot) => {
+        //     const data = snapshot.val();
+        //     if (data) {
+        //         // Convert data object to an array of key-value pairs
+        //         const dataArray = Object.entries(data);
+        //         // Prepend the new data to the existing array
+        //         setDataList((prevDataList) => [...dataArray, ...prevDataList]);
+
+        //         // Update the rendered count
+        //         setRenderedCount((prevCount) => prevCount + dataArray.length);
+
+        //         // Update daily rendered counts
+        //         const newDailyCounts = {};
+        //         dataArray.forEach(([_, value]) => {
+        //             const dateKey = new Date(
+        //                 value.addedAt
+        //             ).toLocaleDateString();
+        //             // Only update the count for the selected date
+        //             if (
+        //                 selectedDate &&
+        //                 dateKey === selectedDate.toLocaleDateString()
+        //             ) {
+        //                 newDailyCounts[dateKey] =
+        //                     (newDailyCounts[dateKey] || 0) + 1;
+        //             }
+        //         });
+        //         setDailyRenderedCounts(newDailyCounts);
+        //     }
+        // });
         onValue(dataRef, (snapshot) => {
             const data = snapshot.val();
             if (data) {
                 // Convert data object to an array of key-value pairs
                 const dataArray = Object.entries(data);
-                // Prepend the new data to the existing array
-                setDataList((prevDataList) => [...dataArray, ...prevDataList]);
-
                 // Update the rendered count
                 setRenderedCount((prevCount) => prevCount + dataArray.length);
 
                 // Update daily rendered counts
-                const newDailyCounts = { ...dailyRenderedCounts };
+                const newDailyCounts = {};
                 dataArray.forEach(([_, value]) => {
                     const dateKey = new Date(
                         value.addedAt
                     ).toLocaleDateString();
-                    newDailyCounts[dateKey] =
-                        (newDailyCounts[dateKey] || 0) + 1;
+                    // Only update the count for the selected date
+                    if (
+                        selectedDate &&
+                        dateKey === selectedDate.toLocaleDateString()
+                    ) {
+                        newDailyCounts[dateKey] =
+                            (newDailyCounts[dateKey] || 0) + 1;
+                    }
                 });
                 setDailyRenderedCounts(newDailyCounts);
+
+                // Prepend the new data to the existing array
+                setDataList((prevDataList) => {
+                    const newDataList = [...prevDataList];
+                    dataArray.forEach((item) => {
+                        newDataList.unshift(item);
+                    });
+                    return newDataList;
+                });
             }
         });
-
         // Clean up listener when component unmounts
         return () => {
             off(dataRef);
         };
-    }, []);
+    }, [selectedDate]);
 
     // Filter dataList based on selectedDate
     const filteredDataList = selectedDate
@@ -70,6 +112,17 @@ const FirebaseDataComponent = () => {
           )
         : dataList;
 
+    // Pagination logic
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentDataList = filteredDataList.slice(
+        indexOfFirstItem,
+        indexOfLastItem
+    );
+
+    // Change page
+    const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
     // Function to copy token address to clipboard
     const copyTokenAddress = (tokenAddress) => {
         navigator.clipboard.writeText(tokenAddress);
@@ -79,13 +132,17 @@ const FirebaseDataComponent = () => {
         <div className="container">
             <h2 className="heading">Список данных из Firebase</h2>
             <p>Total Tracking Items: {renderedCount}</p>
-            <div className="daily-rendered-counts">
-                {Object.entries(dailyRenderedCounts).map(([date, count]) => (
-                    <p key={date}>
-                        {date}: {count}
-                    </p>
-                ))}
-            </div>
+            {selectedDate && (
+                <div className="daily-rendered-counts">
+                    {Object.entries(dailyRenderedCounts).map(
+                        ([date, count]) => (
+                            <p key={date}>
+                                {date}: {count}
+                            </p>
+                        )
+                    )}
+                </div>
+            )}
             <div className="filter">
                 <label htmlFor="datePicker">Filter by Date:</label>
                 <input
@@ -100,13 +157,13 @@ const FirebaseDataComponent = () => {
                 />
             </div>
             <ul className="list">
-                {filteredDataList.map(([key, value]) => (
+                {currentDataList.map(([key, value]) => (
                     <div key={key} className="token-box">
                         <p className="token-name">Token Name</p>
                         <h5 className="token-value">{value.tokenName}</h5>
                         <ul className="mega-list">
                             <li className="li-flex">
-                                <p className="token-name">Token Addressssss:</p>
+                                <p className="token-name">Token Address:</p>
                                 <p className="project_text">
                                     {value.tokenAddress}
                                 </p>
@@ -145,15 +202,30 @@ const FirebaseDataComponent = () => {
                                     ? new Date(value.addedAt).toLocaleString()
                                     : "Unknown"}
                             </li>
-                            <li>
-                                <p>its telegram link</p>
+                            <li className="li-flex">
+                                <a
+                                    className="telegram-bot-link"
+                                    href={`https://t.me/BananaGunSolana_bot?start=ref_vanyaway&address=${encodeURIComponent(
+                                        value.tokenAddress
+                                    )}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    onClick={() =>
+                                        copyTokenAddress(value.tokenAddress)
+                                    }
+                                >
+                                    Banana Gun Solana Bot
+                                </a>
                             </li>
                             <li className="li-flex">
                                 <a
                                     className="telegram-bot-link"
-                                    href="https://t.me/BananaGunSolana_bot?start=ref_vanyaway"
+                                    href="https://t.me/SolTradingBot?start=ref_vanyaway"
                                     target="_blank"
                                     rel="noreferrer"
+                                    onClick={() =>
+                                        copyTokenAddress(value.tokenAddress)
+                                    }
                                 >
                                     Banana Gun Solana Bot
                                 </a>
@@ -162,6 +234,15 @@ const FirebaseDataComponent = () => {
                     </div>
                 ))}
             </ul>
+            <div className="pagination">
+                {Array.from({
+                    length: Math.ceil(filteredDataList.length / itemsPerPage),
+                }).map((_, index) => (
+                    <button key={index} onClick={() => paginate(index + 1)}>
+                        {index + 1}
+                    </button>
+                ))}
+            </div>
         </div>
     );
 };

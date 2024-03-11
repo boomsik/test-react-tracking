@@ -13,14 +13,13 @@ function App() {
     </div>
   );
 =======
-    return (
-        <div className="App">
-            {/* <FirebaseDataComponent /> */}
-            {/* <Test /> */}
-            <Test1 />
-        </div>
-    );
->>>>>>> 15a2abc68d6e0a807db95675c2089821ae101c8f
+  return (
+    <div className="App">
+      {/* <FirebaseDataComponent /> */}
+      {/* <Test /> */}
+      <Test1 />
+    </div>
+  );
 }
 
 export default App;

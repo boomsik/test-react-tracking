@@ -1,8 +1,24 @@
+.container {
+    background-color: #282c34;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: calc(10px + 2vmin);
+    color: white;
+}
+
+.filter {
+    margin-bottom: 30px;
+}
+
 .list {
     justify-content: space-around;
     display: flex;
     flex-direction: row;
-    flex-wrap: wrap-reverse;
+    flex-wrap: wrap;
+    grid-gap: 20px;
     padding: 0;
     margin: 0;
 }
@@ -15,7 +31,7 @@
 .token-box {
     padding: 10px;
     background-color: black;
-    margin-bottom: 150px;
+    margin-bottom: 100px;
     width: 500px;
     border-radius: 20px;
     outline-style: dotted;
@@ -49,4 +65,29 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+@media (max-width: 425px) {
+    /* Apply styles only for screens larger than 768px */
+    .container {
+        width: 100%;
+        font-size: calc(10px + 2vmin); /* Reset font size for larger screens */
+    }
+
+    .list {
+        flex-direction: row; /* Reset flex direction for larger screens */
+    }
+
+    .token-box {
+        width: 250px; /* Reset width for larger screens */
+        margin-bottom: 15px; /* Reset margin for larger screens */
+    }
+
+    .dex-img {
+        width: 100px; /* Reset image size for larger screens */
+    }
+
+    .project_text {
+        width: 200px; /* Reset width for larger screens */
+    }
 }
